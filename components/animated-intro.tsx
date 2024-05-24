@@ -228,7 +228,8 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 36,
-    fontWeight: '600',
+    fontFamily: 'inter-medium',
+    letterSpacing: -0.5,
     left: '0%',
     position: 'absolute',
   },
