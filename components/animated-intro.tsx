@@ -139,7 +139,7 @@ export function AnimatedIntro() {
     return content[index].title
   }, [currentIndex])
 
-  useAnimatedReaction(
+  /** useAnimatedReaction(
     () => labelWidth.value,
     (newWidth) => {
       currentX.value = withDelay(
@@ -185,7 +185,7 @@ export function AnimatedIntro() {
       }
     },
     [currentX, labelWidth],
-  )
+  ) */
 
   return (
     <Animated.View style={[styles.wrapper, style1]}>
