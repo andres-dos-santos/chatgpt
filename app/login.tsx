@@ -1,9 +1,12 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import Colors from '@/constants/Colors'
 import { defaultStyles } from '@/constants/Styles'
+import { useSignIn, useSignUp } from '@clerk/clerk-expo'
 import { useLocalSearchParams } from 'expo-router'
 import { useState } from 'react'
 import {
   ActivityIndicator,
+  Alert,
   Image,
   KeyboardAvoidingView,
   Platform,
@@ -20,17 +23,48 @@ export default function LoginPage() {
   const { type } = useLocalSearchParams<{ type: string }>()
   const { bottom } = useSafeAreaInsets()
 
+  const {
+    setActive: signUpSetActive,
+    isLoaded: signUpLoaded,
+    signUp,
+  } = useSignUp()
+  const { setActive, isLoaded, signIn } = useSignIn()
+
   const [loading, setLoading] = useState(false)
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
 
   const onSignUpPress = async () => {
+    if (!signUpLoaded) return
+
     setLoading(true)
+
+    try {
+      const result = await signUp.create({ emailAddress: email, password })
+
+      signUpSetActive({ session: result.createdSessionId })
+    } catch (error: any) {
+      Alert.alert(error.errors[0].message)
+    } finally {
+      setLoading(false)
+    }
   }
 
   const onSignInPress = async () => {
+    if (!isLoaded) return
+
     setLoading(true)
+
+    try {
+      const result = await signIn.create({ identifier: email, password })
+
+      setActive({ session: result.createdSessionId })
+    } catch (error: any) {
+      Alert.alert(error.errors[0].message)
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (

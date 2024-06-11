@@ -1,14 +1,49 @@
 import { Ionicons } from '@expo/vector-icons'
-import { Stack, useRouter } from 'expo-router'
-import { StatusBar, TouchableOpacity } from 'react-native'
+import { SplashScreen, Stack, useRouter, useSegments } from 'expo-router'
+import {
+  ActivityIndicator,
+  StatusBar,
+  TouchableOpacity,
+  View,
+} from 'react-native'
+import { ClerkProvider, useAuth } from '@clerk/clerk-expo'
+import { GestureHandlerRootView } from 'react-native-gesture-handler'
+import * as SecureStore from 'expo-secure-store'
 
 import { useFonts } from '@/hooks/useFonts'
+import { useEffect } from 'react'
 
-export default function RootLayout() {
+const CLERK_PUBLISHABLE_KEY = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY
+
+export function InitialLayout() {
   const fontsLoaded = useFonts()
   const router = useRouter()
+  const segments = useSegments()
+  const { isLoaded, isSignedIn } = useAuth()
 
-  if (!fontsLoaded) return null
+  useEffect(() => {
+    if (fontsLoaded) SplashScreen.hideAsync()
+  }, [fontsLoaded])
+
+  useEffect(() => {
+    if (!isLoaded) return
+
+    const inAuthGroup = segments[0] === '(auth)'
+
+    if (isSignedIn && !inAuthGroup) {
+      router.replace('/(auth)')
+    } else if (!isSignedIn && inAuthGroup) {
+      router.replace('/')
+    }
+  }, [isLoaded, isSignedIn, router, segments])
+
+  if (!isLoaded || !isSignedIn) {
+    return (
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+        <ActivityIndicator size="large" color="#000" />
+      </View>
+    )
+  }
 
   return (
     <>
@@ -29,7 +64,36 @@ export default function RootLayout() {
             ),
           }}
         />
+        <Stack.Screen name="(auth)" options={{ headerShown: false }} />
       </Stack>
     </>
+  )
+}
+
+const tokenCache = {
+  async getToken(key: string) {
+    try {
+      return SecureStore.getItemAsync(key)
+    } catch (error) {}
+  },
+  async saveToken(key: string, value: string) {
+    try {
+      return SecureStore.setItemAsync(key, value)
+    } catch (error) {}
+  },
+}
+
+SplashScreen.preventAutoHideAsync()
+
+export default function RootLayoutNavigation() {
+  return (
+    <ClerkProvider
+      publishableKey={CLERK_PUBLISHABLE_KEY ?? ''}
+      tokenCache={tokenCache}
+    >
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <InitialLayout />
+      </GestureHandlerRootView>
+    </ClerkProvider>
   )
 }
