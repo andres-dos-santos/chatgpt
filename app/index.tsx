@@ -5,11 +5,7 @@ import { BottomLoginSheet } from '@/components/bottom-login-sheet'
 
 export default function Index() {
   return (
-    <View
-      style={{
-        flex: 1,
-      }}
-    >
+    <View style={{ flex: 1 }}>
       <AnimatedIntro />
       <BottomLoginSheet />
     </View>

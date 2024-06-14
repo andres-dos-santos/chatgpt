@@ -9,9 +9,9 @@ import {
 import { ClerkProvider, useAuth } from '@clerk/clerk-expo'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import * as SecureStore from 'expo-secure-store'
+import { useEffect } from 'react'
 
 import { useFonts } from '@/hooks/useFonts'
-import { useEffect } from 'react'
 
 const CLERK_PUBLISHABLE_KEY = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY
 
@@ -31,13 +31,13 @@ export function InitialLayout() {
     const inAuthGroup = segments[0] === '(auth)'
 
     if (isSignedIn && !inAuthGroup) {
-      router.replace('/(auth)')
+      router.replace('/(auth)/(drawer)/(chat)/new')
     } else if (!isSignedIn && inAuthGroup) {
       router.replace('/')
     }
   }, [isLoaded, isSignedIn, router, segments])
 
-  if (!isLoaded || !isSignedIn) {
+  if (!isLoaded) {
     return (
       <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
         <ActivityIndicator size="large" color="#000" />
