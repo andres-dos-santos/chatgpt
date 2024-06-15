@@ -27,6 +27,7 @@
         <data android:scheme="myapp"/>
         <data android:scheme="com.andres.gpt"/>
         <data android:scheme="exp+chatgptlatest"/>
+        <data android:scheme="gpt"/>
       </intent-filter>
     </activity>
     <activity android:name="com.facebook.react.devsupport.DevSettingsActivity" android:exported="false"/>

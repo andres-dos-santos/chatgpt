@@ -133,7 +133,7 @@ export default function DrawerLayout() {
         name="dalle"
         getId={() => Math.random().toString()}
         options={{
-          title: 'Dall-E',
+          title: 'Dall•E',
           drawerIcon: () => (
             <View style={[styles.item, { backgroundColor: '#000' }]}>
               <Image
