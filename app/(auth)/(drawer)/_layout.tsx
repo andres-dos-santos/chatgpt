@@ -217,8 +217,8 @@ const styles = StyleSheet.create({
     borderRadius: 10,
   },
   userName: {
-    fontSize: 16,
-    fontWeight: '500',
+    fontSize: 15,
     flex: 1,
+    fontFamily: 'inter-medium',
   },
 })
