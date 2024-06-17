@@ -1,26 +1,25 @@
 import { Redirect, Stack } from 'expo-router'
 import {
   Image,
-  Keyboard,
   KeyboardAvoidingView,
   LayoutChangeEvent,
   Platform,
-  ScrollView,
   StyleSheet,
-  Text,
   View,
 } from 'react-native'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import { FlashList } from '@shopify/flash-list'
+import { useMMKVString } from 'react-native-mmkv'
+import OpenAI from 'react-native-openai'
 
 import { defaultStyles } from '@/constants/Styles'
 import { HeaderDropdown } from '@/components/header-dropdown'
 import { MessageInput } from '@/components/message-input'
 import { MessageIdeas } from '@/components/message-ideas'
+import { ChatMessage } from '@/components/chat-message'
 
 import { Message, Role } from '@/utils/interfaces'
-import { FlashList } from '@shopify/flash-list'
-import { ChatMessage } from '@/components/chat-message'
-import { useMMKVString } from 'react-native-mmkv'
+
 import { Storage } from '@/utils/storage'
 
 const DUMMY_MESSAGES: Message[] = [
@@ -35,16 +34,43 @@ const DUMMY_MESSAGES: Message[] = [
 ]
 
 export default function NewChat() {
-  const [messages] = useState<Message[]>([])
+  const [messages, setMessages] = useState<Message[]>([])
 
   const [height, setHeight] = useState(0)
 
   const [GPTVersion, setGPTVersion] = useMMKVString('GPTVersion', Storage)
-  const [key] = useMMKVString('apiKey', Storage)
+  const [key, setKey] = useMMKVString('apiKey', Storage)
   const [organization] = useMMKVString('org', Storage)
 
+  const openAI = useMemo(
+    () =>
+      new OpenAI({
+        apiKey: key ?? '',
+        organization: organization ?? '',
+      }),
+    [key, organization],
+  )
+
   const getCompletion = (message: string) => {
-    console.log(message)
+    if (messages.length === 0) {
+      // create chat later, store to DB
+    }
+
+    setMessages([
+      ...messages,
+      { content: message, role: Role.User },
+      { role: Role.Bot, content: '' },
+    ])
+
+    openAI.chat.stream({
+      messages: [
+        {
+          role: 'user',
+          content: message,
+        },
+      ],
+      model: GPTVersion === '4' ? 'gpt-4' : 'gpt-3.5-turbo',
+    })
   }
 
   const onLayout = (event: LayoutChangeEvent) => {
@@ -52,6 +78,32 @@ export default function NewChat() {
 
     setHeight(height)
   }
+
+  useEffect(() => {
+    function handleMessage(payload: any) {
+      setMessages((messages) => {
+        const newMessage = payload.choices[0].delta.content
+
+        if (newMessage) {
+          messages[messages.length - 1].content += newMessage
+
+          return [...messages]
+        }
+
+        if (payload.choices[0]?.finishReason) {
+          // save the message to the DB
+        }
+
+        return [...messages, newMessage]
+      })
+    }
+
+    openAI.chat.addListener('onChatMessageReceived', handleMessage)
+
+    return () => {
+      openAI.chat.removeListener('onChatMessageReceived')
+    }
+  }, [openAI])
 
   /** useEffect(() => {
     const showSubscription = Keyboard.addListener(
@@ -106,6 +158,8 @@ export default function NewChat() {
       />
 
       <View style={{ flex: 1 }} onLayout={onLayout}>
+        {/** <Button title="Remove api key" onPress={() => setKey(undefined)} /> */}
+
         {messages.length === 0 && (
           <View style={[styles.logoContainer, { marginTop: height / 2 - 100 }]}>
             <Image
@@ -131,7 +185,7 @@ export default function NewChat() {
         style={{ position: 'absolute', bottom: 0, left: 0, width: '100%' }}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
-        {messages.length === 0 && <MessageIdeas onSelectCard={console.log} />}
+        {messages.length === 0 && <MessageIdeas onSelectCard={getCompletion} />}
 
         <MessageInput onShouldSendMessage={getCompletion} />
       </KeyboardAvoidingView>
