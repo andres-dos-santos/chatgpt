@@ -1,8 +1,17 @@
-import { Image, StyleSheet, Text, View } from 'react-native'
+import { ActivityIndicator, Image, StyleSheet, Text, View } from 'react-native'
 
 import { Message, Role } from '@/utils/interfaces'
+import Colors from '@/constants/Colors'
 
-export function ChatMessage({ content, role, imageUrl, prompt }: Message) {
+export function ChatMessage({
+  content,
+  role,
+  imageUrl,
+  prompt,
+  loading,
+}: Message & {
+  loading?: boolean
+}) {
   return (
     <View style={styles.row}>
       {role === Role.Bot ? (
@@ -21,7 +30,23 @@ export function ChatMessage({ content, role, imageUrl, prompt }: Message) {
         />
       )}
 
-      <Text style={styles.text}>{content}</Text>
+      {loading ? (
+        <View style={styles.loading}>
+          <ActivityIndicator color={Colors.primary} />
+        </View>
+      ) : (
+        <>
+          {content === '' && imageUrl ? (
+            <Image
+              source={{ uri: imageUrl }}
+              style={styles.previewImage}
+              alt=""
+            />
+          ) : (
+            <Text style={styles.text}>{content}</Text>
+          )}
+        </>
+      )}
     </View>
   )
 }
@@ -63,5 +88,15 @@ const styles = StyleSheet.create({
     fontSize: 14,
     flexWrap: 'wrap',
     flex: 1,
+  },
+  loading: {
+    justifyContent: 'center',
+    height: 26,
+    marginLeft: 14,
+  },
+  previewImage: {
+    width: 240,
+    height: 240,
+    borderRadius: 10,
   },
 })

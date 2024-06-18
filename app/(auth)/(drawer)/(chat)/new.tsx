@@ -22,16 +22,16 @@ import { Message, Role } from '@/utils/interfaces'
 
 import { Storage } from '@/utils/storage'
 
-const DUMMY_MESSAGES: Message[] = [
-  {
-    content: 'Hello, how can I help you today?',
-    role: Role.Bot,
-  },
-  {
-    content: 'I need help with my React Native app',
-    role: Role.User,
-  },
-]
+// const DUMMY_MESSAGES: Message[] = [
+//   {
+//     content: 'Hello, how can I help you today?',
+//     role: Role.Bot,
+//   },
+//   {
+//     content: 'I need help with my React Native app',
+//     role: Role.User,
+//   },
+// ]
 
 export default function NewChat() {
   const [messages, setMessages] = useState<Message[]>([])
@@ -39,7 +39,7 @@ export default function NewChat() {
   const [height, setHeight] = useState(0)
 
   const [GPTVersion, setGPTVersion] = useMMKVString('GPTVersion', Storage)
-  const [key, setKey] = useMMKVString('apiKey', Storage)
+  const [key] = useMMKVString('apiKey', Storage)
   const [organization] = useMMKVString('org', Storage)
 
   const openAI = useMemo(
@@ -80,6 +80,7 @@ export default function NewChat() {
   }
 
   useEffect(() => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     function handleMessage(payload: any) {
       setMessages((messages) => {
         const newMessage = payload.choices[0].delta.content
